@@ -1,0 +1,36 @@
+version: 0.2
+
+env:
+  variables:
+    dockerhub_username: "/myapp/docker-credentials/username"
+  parameter-store:
+    docker_password: "/myapp/docker-credentials/password"
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+
+  pre_build:
+    commands:
+      - echo "Installing dependencies..."
+      - pip install -r day-13/simple-python-app/requirements.txt
+      - docker login -u $dockerhub_username -p $docker_paasword
+
+  build:
+    commands:
+      - echo "Running tests..."
+      - cd day-13/simple-python-app/
+      - echo "Building Docker image..."
+      - docker build -t simple-python-app .
+      - docker tag simple-python-app $dockerhub_username/pythonflask:simple-python-app
+    
+  post_build:
+    commands:
+      - docker push elampari/pythonflask:simple-python-app
+      - echo "Build completed successfully!"
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: ../simple-python-app
